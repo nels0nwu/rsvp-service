@@ -16,7 +16,8 @@ const messages = db.get("messages");
 
 app.get("/", (req, res) => {
   res.json({
-    message: "Hello world 😆",
+    message: "Hello world 😆 wouldn't you like to know",
+    mongo: process.env.MONGO_URL,
   });
 });
 
