@@ -7,8 +7,8 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-const url = process.env.MONGO_URL || "localhost:27017/helloworld";
-const db = monk(url);
+const mongoUrl = process.env.MONGO_URL || "localhost:27017/helloworld";
+const db = monk(mongoUrl);
 db.then(() => {
   console.log("Connected correctly to server");
 });
@@ -53,4 +53,5 @@ app.post("/messages", (req, res) => {
 
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);
+  console.log(`Connecting to mongo db: ${mongoUrl}`);
 });
