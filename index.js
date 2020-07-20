@@ -7,7 +7,7 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-const url = "localhost:27017/helloworld";
+const url = process.env.MONGO_URL || "localhost:27017/helloworld";
 const db = monk(url);
 db.then(() => {
   console.log("Connected correctly to server");
@@ -16,7 +16,7 @@ const messages = db.get("messages");
 
 app.get("/", (req, res) => {
   res.json({
-    message: "Hello world 😆 wouldn't you like to know",
+    message: "Hello world 😆 wouldn't you like to know mongo mongo",
     mongo: process.env.MONGO_URL,
   });
 });
