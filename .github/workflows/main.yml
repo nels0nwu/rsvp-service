@@ -16,4 +16,4 @@ jobs:
           heroku_app_name: "nelson-hello-world" #Must be unique in Heroku
           heroku_email: "heroku@nelsonwu.net"
         env:
-          MONGO_URL: ${{ secrets.MONGO_URL }}
+          HD_MONGO_URL: ${{ secrets.MONGO_URL }}
