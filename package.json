@@ -1,5 +1,5 @@
 {
-  "name": "express-hello-world",
+  "name": "rsvp-service",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,16 +9,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nels0nwu/node-express-hello-world.git"
+    "url": "git+https://github.com/nels0nwu/rsvp-service.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nels0nwu/node-express-hello-world/issues"
+    "url": "https://github.com/nels0nwu/rsvp-service/issues"
   },
-  "homepage": "https://github.com/nels0nwu/node-express-hello-world#readme",
+  "homepage": "https://github.com/nels0nwu/rsvp-service#readme",
   "dependencies": {
     "cors": "^2.8.5",
+    "csv-parser": "^2.3.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "monk": "^7.3.0",
