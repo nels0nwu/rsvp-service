@@ -13,7 +13,7 @@ jobs:
       - uses: akhileshns/heroku-deploy@v3.2.6 # This is the action
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: "nelson-hello-world" #Must be unique in Heroku
+          heroku_app_name: "nelson-rsvp-service" #Must be unique in Heroku
           heroku_email: "heroku@nelsonwu.net"
         env:
           HD_MONGO_URL: ${{ secrets.MONGO_URL }}

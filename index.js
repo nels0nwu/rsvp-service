@@ -94,10 +94,9 @@ app.get("/", (req, res) => {
   });
 });
 
-// Search for a group by guest name
+// Search for a group by guest name, eg. /findguests?name=nelson%20wu
 app.get("/findguests", (req, res) => {
   // TODO: validate get param exists
-
   rsvp
     .findOne(
       { "guests.name": req.query.name },
