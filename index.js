@@ -2,10 +2,12 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const monk = require("monk");
+const multer = require("multer");
 const csv = require("csv-parser");
 const fs = require("fs");
 const app = express();
 const port = process.env.PORT || 3000;
+var upload = multer();
 
 app.use(cors());
 app.use(express.json());
@@ -107,6 +109,11 @@ app.get("/findguests", (req, res) => {
       { collation: { locale: "en", strength: 2 } }
     )
     .then((group) => res.json(group));
+});
+
+// submit rsvp
+app.post("/submitrsvp", upload.none(), (req, res) => {
+  console.log(req.body);
 });
 
 app.listen(port, () => {
