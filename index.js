@@ -28,7 +28,11 @@ rsvp.createIndex("guests.name", {
 rsvp.update({}, { $set: { "guests.$[].infile": false } }, { multi: true });
 
 // Add guests
-fs.createReadStream("guests.csv")
+const getlistFilename = "guests.csv";
+fs.createReadStream(getlistFilename)
+  .on("error", function (err) {
+    console.log(`Could not find csv ${getlistFilename}`);
+  })
   .pipe(csv())
   .on("data", (row) => {
     // Try updating existing records
