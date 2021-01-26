@@ -2,12 +2,10 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const monk = require("monk");
-const multer = require("multer");
 const csv = require("csv-parser");
 const fs = require("fs");
 const app = express();
 const port = process.env.PORT || 3000;
-var upload = multer();
 
 app.use(cors());
 app.use(express.json());
@@ -27,71 +25,81 @@ rsvp.createIndex("guests.name", {
   collation: { locale: "en", strength: 2 },
 });
 
-rsvp.update({}, { $set: { "guests.$[].infile": false } }, { multi: true });
-
-// Add guests
-const getlistFilename = "guests.csv";
-fs.createReadStream(getlistFilename)
-  .on("error", function (err) {
-    console.log(`Could not find csv ${getlistFilename}`);
-  })
-  .pipe(csv())
-  .on("data", (row) => {
-    // Try updating existing records
-    rsvp
-      .update(
-        {
-          group_id: parseInt(row.GuestGroup),
-          "guests.id": parseInt(row.GuestId),
-        },
-        {
-          $set: {
-            "guests.$.name": row.GuestName,
-            "guests.$.infile": true,
-          },
-        }
-      )
-      .then((result) => {
-        if (result.n === 0) {
-          // No update. New guest to add!
-          console.log(`New guest: ${row.GuestName}`);
-          rsvp.update(
+rsvp
+  .update({}, { $set: { "guests.$[].infile": false } }, { multi: true })
+  .then(() => {
+    // Add guests
+    const getlistFilename = "guests.csv";
+    fs.createReadStream(getlistFilename)
+      .on("error", function (err) {
+        console.log(`Could not find csv ${getlistFilename}`);
+      })
+      .pipe(csv())
+      .on("data", (row) => {
+        // Try updating existing records
+        rsvp
+          .update(
             {
               group_id: parseInt(row.GuestGroup),
+              "guests.id": parseInt(row.GuestId),
             },
             {
-              $push: {
-                guests: {
-                  id: parseInt(row.GuestId),
-                  name: row.GuestName,
-                  infile: true,
-                },
+              $set: {
+                "guests.$.name": row.GuestName,
+                "guests.$.infile": true,
               },
+            }
+          )
+          .then((result) => {
+            if (result.n === 0) {
+              // No update. New guest to add!
+              console.log(`New guest: ${row.GuestName}`);
+              rsvp.update(
+                {
+                  group_id: parseInt(row.GuestGroup),
+                },
+                {
+                  $push: {
+                    guests: {
+                      id: parseInt(row.GuestId),
+                      name: row.GuestName,
+                      infile: true,
+                    },
+                  },
+                },
+                { upsert: true }
+              );
+            }
+          });
+      })
+      .on("end", function () {
+        rsvp
+          .update(
+            // Remove records from database that don't exist in the text file
+            {},
+            {
+              $pull: { guests: { infile: false } },
             },
-            { upsert: true }
-          );
-        }
+            { multi: true }
+          )
+          .then((result) => {
+            if (result.nModified > 0) {
+              console.log(`Removed guests`);
+            }
+          })
+          .then(() => {
+            // Delete empty groups
+            rsvp.remove({ guests: { $exists: true, $size: 0 } });
+          })
+          .then(() => {
+            // Delete infile field
+            rsvp.update(
+              {},
+              { $unset: { "guests.$[].infile": "" } },
+              { multi: true }
+            );
+          });
       });
-  })
-  .on("end", function () {
-    // Remove records from database that don't exist in the text file
-    rsvp
-      .update(
-        {},
-        {
-          $pull: { guests: { infile: false } },
-        },
-        { multi: true }
-      )
-      .then((result) => {
-        if (result.nModified > 0) {
-          console.log(`Removed guests`);
-        }
-      });
-    rsvp.update({}, { $unset: { "guests.$[].infile": "" } }, { multi: true });
-
-    // Delete empty groups
-    rsvp.remove({ guests: { $exists: true, $size: 0 } });
   });
 
 app.get("/", (req, res) => {
@@ -102,7 +110,11 @@ app.get("/", (req, res) => {
 
 // Search for a group by guest name, eg. /findguests?name=nelson%20wu
 app.get("/findguests", (req, res) => {
-  // TODO: validate get param exists
+  if (!req.query.name) {
+    res.status(400).send("Name parameter required");
+    return;
+  }
+
   rsvp
     .findOne(
       { "guests.name": req.query.name },
@@ -112,8 +124,9 @@ app.get("/findguests", (req, res) => {
 });
 
 // submit rsvp
-app.post("/submitrsvp", upload.none(), (req, res) => {
+app.post("/submitrsvp", (req, res) => {
   console.log(req.body);
+  res.send("Hello World!");
 });
 
 app.listen(port, () => {
