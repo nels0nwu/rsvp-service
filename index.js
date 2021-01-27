@@ -151,6 +151,8 @@ app.post("/submitrsvp", (req, res) => {
         );
       });
     });
+
+  res.send("Hello World!");
 });
 
 app.listen(port, () => {
