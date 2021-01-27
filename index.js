@@ -125,8 +125,32 @@ app.get("/findguests", (req, res) => {
 
 // submit rsvp
 app.post("/submitrsvp", (req, res) => {
-  console.log(req.body);
-  res.send("Hello World!");
+  rsvp
+    .update(
+      {
+        group_id: parseInt(req.body.GroupId),
+      },
+      {
+        $set: {
+          message: req.body.Message,
+        },
+      }
+    )
+    .then(() => {
+      req.body.GuestRsvps.forEach((guest) => {
+        rsvp.update(
+          {
+            group_id: parseInt(req.body.GroupId),
+            "guests.id": parseInt(guest.Id),
+          },
+          {
+            $set: {
+              "guests.$.attending": !!guest.Attending,
+            },
+          }
+        );
+      });
+    });
 });
 
 app.listen(port, () => {
