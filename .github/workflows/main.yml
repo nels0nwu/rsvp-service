@@ -17,3 +17,8 @@ jobs:
           heroku_email: "heroku@nelsonwu.net"
         env:
           HD_MONGO_URL: ${{ secrets.MONGO_URL }}
+          HD_EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          HD_EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          HD_EMAIL_SERVER: ${{ secrets.EMAIL_SERVER }}
+          HD_EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          HD_EMAIL_TO: ${{ secrets.EMAIL_TO }}
