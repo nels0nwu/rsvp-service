@@ -4,6 +4,7 @@ const cors = require("cors");
 const monk = require("monk");
 const csv = require("csv-parser");
 const fs = require("fs");
+const nodemailer = require("nodemailer");
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -108,6 +109,12 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/ping", (req, res) => {
+  res.json({
+    message: "pong",
+  });
+});
+
 // Search for a group by guest name, eg. /findguests?name=nelson%20wu
 app.get("/findguests", (req, res) => {
   if (!req.query.name) {
@@ -124,7 +131,7 @@ app.get("/findguests", (req, res) => {
 });
 
 // submit rsvp
-app.post("/submitrsvp", (req, res) => {
+app.post("/submitrsvp", async (req, res) => {
   rsvp
     .update(
       {
@@ -152,8 +159,37 @@ app.post("/submitrsvp", (req, res) => {
       });
     });
 
-  res.send("Hello World!");
+  await sendEmail(req.body);
+
+  res.send("Done");
 });
+
+async function sendEmail(requestBody) {
+  const transporter = nodemailer.createTransport({
+    port: process.env.EMAIL_PORT, // true for 465, false for other ports
+    host: process.env.EMAIL_SERVER,
+    auth: {
+      user: process.env.EMAIL_FROM,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+    secure: true,
+  });
+
+  let from = requestBody.GuestRsvps.map((g) => g.GuestName).join(" & ");
+  let responses = requestBody.GuestRsvps.map(
+    (g) => `${g.GuestName} attendance: ${!!g.Attending}`
+  ).join("\n");
+  let message = requestBody.Message;
+
+  const mailData = {
+    from: process.env.EMAIL_FROM, // sender address
+    to: process.env.EMAIL_TO, // list of receivers
+    subject: `RSVP from ${from} via website`, // Subject line
+    text: `${responses}\nMessage: ${message}`, // plain text body
+  };
+
+  let info = await transporter.sendMail(mailData);
+}
 
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);
