@@ -138,8 +138,11 @@ app.post("/submitrsvp", async (req, res) => {
         group_id: parseInt(req.body.GroupId),
       },
       {
-        $set: {
-          message: req.body.Message,
+        $push: {
+          messages: {
+            message: req.body.Message,
+            date: new Date(),
+          },
         },
       }
     )
