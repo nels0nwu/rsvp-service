@@ -130,6 +130,10 @@ app.get("/findguests", (req, res) => {
     .then((group) => res.json(group));
 });
 
+app.get("/getresponses", (req, res) => {
+  rsvp.find({}).then((group) => res.json(group));
+});
+
 // submit rsvp
 app.post("/submitrsvp", async (req, res) => {
   rsvp
