@@ -5,11 +5,19 @@ const monk = require("monk");
 const csv = require("csv-parser");
 const fs = require("fs");
 const nodemailer = require("nodemailer");
+const morgan = require("morgan");
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+morgan.token("body", (req, res) => JSON.stringify(req.body));
+app.use(
+  morgan(
+    ":method :url :status :response-time ms - :res[content-length] :body - :req[content-length]"
+  )
+);
 
 const mongoUrl = process.env.MONGO_URL || "localhost:27017/rsvp";
 const db = monk(mongoUrl);
@@ -131,7 +139,23 @@ app.get("/findguests", (req, res) => {
 });
 
 app.get("/getresponses", (req, res) => {
-  rsvp.find({}).then((group) => res.json(group));
+  rsvp.find({}).then((groups) =>
+    res.json(
+      groups.map(({ messages, ...other }) => {
+        return {
+          ...other,
+          date:
+            messages &&
+            new Date(
+              Math.max.apply(
+                null,
+                messages.map((m) => m.date)
+              )
+            ),
+        };
+      })
+    )
+  );
 });
 
 // submit rsvp
@@ -172,15 +196,7 @@ app.post("/submitrsvp", async (req, res) => {
 });
 
 async function sendEmail(requestBody) {
-  const transporter = nodemailer.createTransport({
-    port: process.env.EMAIL_PORT, // true for 465, false for other ports
-    host: process.env.EMAIL_SERVER,
-    auth: {
-      user: process.env.EMAIL_FROM,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-    secure: true,
-  });
+  const transporter = createTransporter();
 
   let from = requestBody.GuestRsvps.map((g) => g.GuestName).join(" & ");
   let responses = requestBody.GuestRsvps.map(
@@ -196,6 +212,18 @@ async function sendEmail(requestBody) {
   };
 
   let info = await transporter.sendMail(mailData);
+}
+
+function createTransporter() {
+  return nodemailer.createTransport({
+    port: process.env.EMAIL_PORT, // true for 465, false for other ports
+    host: process.env.EMAIL_SERVER,
+    auth: {
+      user: process.env.EMAIL_FROM,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+    secure: true,
+  });
 }
 
 app.listen(port, () => {
